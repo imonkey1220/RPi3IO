@@ -57,8 +57,9 @@ public class MainActivity extends Activity {
     private Gpio RESETGpio;
     String RESET="BCM26";
     private Map<String,Gpio> GPIOMap=new HashMap<>();
-    DatabaseReference mIOLive, mXINPUT,mYOUTPUT,mFriend,presenceRef,lastOnlineRef,connectedRef,connectedRefF;
+    DatabaseReference mIOLive,mLog, mXINPUT,mYOUTPUT,mFriend,presenceRef,lastOnlineRef,connectedRef,connectedRefF;
     Map<String, Object> input = new HashMap<>();
+    Map<String, Object> log = new HashMap<>();
     String memberEmail,deviceId;
     public static final String devicePrefs = "devicePrefs";
     Map<String, Object> alert = new HashMap<>();
@@ -84,6 +85,7 @@ public class MainActivity extends Activity {
             init();
             deviceOnline();
         }
+        mLog=FirebaseDatabase.getInstance().getReference("/LOG/GPIO/" + deviceId+"/LOG/");
         mXINPUT = FirebaseDatabase.getInstance().getReference("/LOG/GPIO/" + deviceId+"/X/");
         mYOUTPUT = FirebaseDatabase.getInstance().getReference("/LOG/GPIO/" + deviceId+"/Y/");
     }
@@ -152,10 +154,11 @@ public class MainActivity extends Activity {
                             try {
                                 input.clear();
                                 input.put(GPIOName[index], GPIO[index].getValue());
-                                input.put("member", memberEmail);
+                                input.put("memberEmail", memberEmail);
                                 input.put("timeStamp", ServerValue.TIMESTAMP);
                                 mXINPUT.push().setValue(input);
                                 alert(GPIOName[index]+":"+GPIO[index].getValue());
+                                log(GPIOName[index]+":"+GPIO[index].getValue());
 
                             } catch (IOException e) {
                                 e.printStackTrace();
@@ -190,6 +193,7 @@ public class MainActivity extends Activity {
                             try {
                                 GPIOMap.get(OutputPin).setValue(true);
                                 alert(OutputPin+":"+true);
+                                log(OutputPin+":"+true);
                             } catch (IOException e) {
                                 e.printStackTrace();
                             }
@@ -345,6 +349,13 @@ public class MainActivity extends Activity {
             @Override
             public void onCancelled(DatabaseError databaseError) {}
         });
+    }
+    private void log(String message) {
+        log.clear();
+        log.put("message", message);
+        log.put("memberEmail", memberEmail);
+        log.put("timeStamp", ServerValue.TIMESTAMP);
+        mLog.push().setValue(log);
     }
 }
 
