@@ -1,4 +1,4 @@
-package com.example.androidthings.pi3Go;
+package tw.imonkey.androidthings.rpi3io;
 
 import org.java_websocket.WebSocket;
 import org.java_websocket.handshake.ClientHandshake;

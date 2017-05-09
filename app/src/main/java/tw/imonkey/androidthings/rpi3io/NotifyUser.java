@@ -1,4 +1,4 @@
-package com.example.androidthings.pi3Go;
+package tw.imonkey.androidthings.rpi3io;
 
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
@@ -47,7 +47,7 @@ class NotifyUser {
     }
 
     static void IIDPUSH(String deviceId,String memberEmail,String message_title,String message_body){
-        DatabaseReference mPUSHMaster= FirebaseDatabase.getInstance().getReference("/LOG/PUSH/");
+        DatabaseReference mPUSHMaster= FirebaseDatabase.getInstance().getReference("/LOG/PUSHIID/");
 
         Map<String, Object> message = new HashMap<>();
         message.clear();

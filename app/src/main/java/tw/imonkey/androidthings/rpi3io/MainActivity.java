@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.example.androidthings.pi3Go;
+package tw.imonkey.androidthings.rpi3io;
 
 import android.app.Activity;
 
@@ -33,6 +33,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.os.Handler;
+import android.util.Log;
 
 import java.io.IOException;
 import java.net.Inet4Address;
@@ -48,15 +50,19 @@ import java.util.TimeZone;
 import de.greenrobot.event.EventBus;
 
 public class MainActivity extends Activity {
+    Handler mHandler = new Handler();//blink
+    boolean mLedState = false;//blink
+
     //GPIO: BCM12, BCM13, BCM16, BCM17, BCM18, BCM19, BCM20, BCM21, BCM22, BCM23, BCM24, BCM25, BCM26, BCM27, BCM4, BCM5, BCM6
     String PiGPIO[]={"BCM4","BCM17","BCM27","BCM22","BCM5","BCM6","BCM13","BCM19",
             "BCM18","BCM23","BCM24","BCM25","BCM12","BCM16","BCM20","BCM21"};
     String GPIOName[]={"X00","X01","X02","X03","X04","X05","X06","X07",
             "Y00","Y01","Y02","Y03","Y04","Y05","Y06","Y07"};
-    Gpio[] GPIO=new Gpio[16] ;
+    Gpio[] GPIO=new Gpio[16];
     private Gpio RESETGpio;
     String RESET="BCM26";
     private Map<String,Gpio> GPIOMap=new HashMap<>();
+
     DatabaseReference mIOLive,mLog, mXINPUT,mYOUTPUT,mFriend,presenceRef,lastOnlineRef,connectedRef,connectedRefF;
     Map<String, Object> input = new HashMap<>();
     Map<String, Object> log = new HashMap<>();
@@ -71,19 +77,19 @@ public class MainActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         TimeZone.setDefault(TimeZone.getTimeZone("Asia/Taipei"));
-
         EventBus.getDefault().register(this);
         SharedPreferences settings = getSharedPreferences(devicePrefs, Context.MODE_PRIVATE);
         memberEmail = settings.getString("memberEmail", null);
         deviceId = settings.getString("deviceId", null);
 
         if (memberEmail == null) {
-            memberEmail = "RPI3IO@test.com";
+            memberEmail = "test@po-pp.com";
             deviceId = "RPI3IOtest";
             startServer();
         }else{
             init();
             deviceOnline();
+            blink();
         }
         mLog=FirebaseDatabase.getInstance().getReference("/LOG/GPIO/" + deviceId+"/LOG/");
         mXINPUT = FirebaseDatabase.getInstance().getReference("/LOG/GPIO/" + deviceId+"/X/");
@@ -93,6 +99,7 @@ public class MainActivity extends Activity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        mHandler.removeCallbacks(mBlinkRunnable);
         EventBus.getDefault().unregister(this);
         if ( RESETGpio != null) {
             try {
@@ -357,5 +364,32 @@ public class MainActivity extends Activity {
         log.put("timeStamp", ServerValue.TIMESTAMP);
         mLog.push().setValue(log);
     }
+//blink test
+    private void blink(){
+        // Post a Runnable that continuously switch the state of the GPIO, blinking the
+        // corresponding LED
+        mHandler.post(mBlinkRunnable);
+    }
+
+    private Runnable mBlinkRunnable = new Runnable() {
+        @Override
+        public void run() {
+            // Exit Runnable if the GPIO is already closed
+            if (GPIO[8] == null) {
+                return;
+            }
+            try {
+                // Toggle the GPIO state
+                mLedState = !mLedState;
+                GPIO[8].setValue(mLedState);
+                Log.d("blink", "State set to " + mLedState);
+
+                // Reschedule the same runnable in {#INTERVAL_BETWEEN_BLINKS_MS} milliseconds
+                mHandler.postDelayed(mBlinkRunnable, 1000);
+            } catch (IOException e) {
+                Log.e("blink", "Error on PeripheralIO API", e);
+            }
+        }
+    };
 }
 

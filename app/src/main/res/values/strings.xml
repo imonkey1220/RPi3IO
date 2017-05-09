@@ -14,5 +14,5 @@
   limitations under the License.
   -->
 <resources>
-    <string name="app_name">pi3Go_IO</string>
+    <string name="app_name">rpi3GPIO</string>
 </resources>

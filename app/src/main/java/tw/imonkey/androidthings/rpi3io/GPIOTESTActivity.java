@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.example.androidthings.pi3Go;
+package tw.imonkey.androidthings.rpi3io;
 
 import android.app.Activity;
 
@@ -53,12 +53,15 @@ public class GPIOTESTActivity extends Activity {
     DatabaseReference  mXINPUT,mYOUTPUT,mFriend,presenceRef,lastOnlineRef,connectedRef,connectedRefF;
     Map<String, Object> input = new HashMap<>();
     Map<String, Object> alert = new HashMap<>();
+    Map<String, Object> log = new HashMap<>();
     Map<String,String> pinName = new HashMap<>();
     String memberEmail,deviceId;
     public static final String devicePrefs = "devicePrefs";
 
     public MySocketServer mServer;
     private static final int SERVER_PORT = 9402;
+
+    DatabaseReference mLog;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -382,11 +385,11 @@ public class GPIOTESTActivity extends Activity {
                     try {
                         input.clear();
                         input.put("X00", mX00Gpio.getValue());
-                        input.put("member",memberEmail);
+                        input.put("memberEmail",memberEmail);
                         input.put("timeStamp", ServerValue.TIMESTAMP);
                         mXINPUT.push().setValue(input);
-
                         alert("X_input:"+memberEmail+"->X00="+mX00Gpio.getValue());
+                        log("X_input:"+memberEmail+"->X00="+mX00Gpio.getValue());
                     } catch (IOException e) {
                         e.printStackTrace();
                         alert("X_input:"+memberEmail+"->X00=Err");
@@ -410,10 +413,10 @@ public class GPIOTESTActivity extends Activity {
                     try {
                         input.clear();
                         input.put("X01", mX01Gpio.getValue());
-                        input.put("member",memberEmail);
+                        input.put("memberEmail",memberEmail);
                         input.put("timeStamp", ServerValue.TIMESTAMP);
                         mXINPUT.push().setValue(input);
-
+                        log("X_input:"+memberEmail+"->X00="+mX01Gpio.getValue());
                         alert("X_input:"+memberEmail+"->X01="+mX01Gpio.getValue());
                     } catch (IOException e) {
                         e.printStackTrace();
@@ -439,11 +442,11 @@ public class GPIOTESTActivity extends Activity {
                     try {
                         input.clear();
                         input.put("X02", mX02Gpio.getValue());
-                        input.put("member",memberEmail);
+                        input.put("memberEmail",memberEmail);
                         input.put("timeStamp", ServerValue.TIMESTAMP);
                         mXINPUT.push().setValue(input);
-
                         alert("X_input:"+memberEmail+"->X02="+mX02Gpio.getValue());
+                        log("X_input:"+memberEmail+"->X02="+mX02Gpio.getValue());
                     } catch (IOException e) {
                         e.printStackTrace();
                         alert("X_input:"+memberEmail+"->X02=Err");
@@ -467,10 +470,11 @@ public class GPIOTESTActivity extends Activity {
                     try {
                         input.clear();
                         input.put("X03", mX03Gpio.getValue());
-                        input.put("member",memberEmail);
+                        input.put("memberEmail",memberEmail);
                         input.put("timeStamp", ServerValue.TIMESTAMP);
                         mXINPUT.push().setValue(input);
                         alert("X_input:"+memberEmail+"->X03="+mX03Gpio.getValue());
+                        log("X_input:"+memberEmail+"->X03="+mX03Gpio.getValue());
                     } catch (IOException e) {
                         e.printStackTrace();
                         alert("X_input:"+memberEmail+"->X03=Err");
@@ -494,11 +498,11 @@ public class GPIOTESTActivity extends Activity {
                     try {
                         input.clear();
                         input.put("X04", mX04Gpio.getValue());
-                        input.put("member",memberEmail);
+                        input.put("memberEmail",memberEmail);
                         input.put("timeStamp", ServerValue.TIMESTAMP);
                         mXINPUT.push().setValue(input);
-
                         alert("X_input:"+memberEmail+"->X04="+mX04Gpio.getValue());
+                        log("X_input:"+memberEmail+"->X04="+mX04Gpio.getValue());
                     } catch (IOException e) {
                         e.printStackTrace();
                         alert("X_input:"+memberEmail+"->X04=Err");
@@ -522,10 +526,11 @@ public class GPIOTESTActivity extends Activity {
                     try {
                         input.clear();
                         input.put("X05", mX01Gpio.getValue());
-                        input.put("member",memberEmail);
+                        input.put("memberEmail",memberEmail);
                         input.put("timeStamp", ServerValue.TIMESTAMP);
                         mXINPUT.push().setValue(input);
                         alert("X_input:"+memberEmail+"->X05="+mX06Gpio.getValue());
+                        log("X_input:"+memberEmail+"->X05="+mX06Gpio.getValue());
                     } catch (IOException e) {
                         e.printStackTrace();
                         alert("X_input:"+memberEmail+"->X05=Err");
@@ -550,11 +555,11 @@ public class GPIOTESTActivity extends Activity {
                     try {
                         input.clear();
                         input.put("X06", mX06Gpio.getValue());
-                        input.put("member",memberEmail);
+                        input.put("memberEmail",memberEmail);
                         input.put("timeStamp", ServerValue.TIMESTAMP);
                         mXINPUT.push().setValue(input);
-
                         alert("X_input:"+memberEmail+"->X06="+mX06Gpio.getValue());
+                        log("X_input:"+memberEmail+"->X06="+mX06Gpio.getValue());
                     } catch (IOException e) {
                         e.printStackTrace();
                         alert("X_input:"+memberEmail+"->X06=Err");
@@ -578,10 +583,11 @@ public class GPIOTESTActivity extends Activity {
                     try {
                         input.clear();
                         input.put("X07", mX07Gpio.getValue());
-                        input.put("member",memberEmail);
+                        input.put("memberEmail",memberEmail);
                         input.put("timeStamp", ServerValue.TIMESTAMP);
                         mXINPUT.push().setValue(input);
                         alert("X_input:"+memberEmail+"->X07="+mX07Gpio.getValue());
+                        log("X_input:"+memberEmail+"->X07="+mX07Gpio.getValue());
                     } catch (IOException e) {
                         e.printStackTrace();
                         alert("X_input:"+memberEmail+"->X07=Err");
@@ -875,6 +881,14 @@ public class GPIOTESTActivity extends Activity {
             @Override
             public void onCancelled(DatabaseError databaseError) {}
         });
+    }
+
+    private void log(String message) {
+        log.clear();
+        log.put("message", message);
+        log.put("memberEmail", memberEmail);
+        log.put("timeStamp", ServerValue.TIMESTAMP);
+        mLog.push().setValue(log);
     }
 }
 
