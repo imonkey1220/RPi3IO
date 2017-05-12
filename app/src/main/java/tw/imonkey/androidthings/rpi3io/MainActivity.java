@@ -58,7 +58,7 @@ public class MainActivity extends Activity {
             "BCM18","BCM23","BCM24","BCM25","BCM12","BCM16","BCM20","BCM21"};
     String GPIOName[]={"X00","X01","X02","X03","X04","X05","X06","X07",
             "Y00","Y01","Y02","Y03","Y04","Y05","Y06","Y07"};
-    Gpio[] GPIO=new Gpio[16];
+    private Gpio[] GPIO=new Gpio[16];
     private Gpio RESETGpio;
     String RESET="BCM26";
     private Map<String,Gpio> GPIOMap=new HashMap<>();
@@ -86,11 +86,10 @@ public class MainActivity extends Activity {
             memberEmail = "test@po-pp.com";
             deviceId = "RPI3IOtest";
             startServer();
-        }else{
+        }
             init();
             deviceOnline();
-            blink();
-        }
+
         mLog=FirebaseDatabase.getInstance().getReference("/LOG/GPIO/" + deviceId+"/LOG/");
         mXINPUT = FirebaseDatabase.getInstance().getReference("/LOG/GPIO/" + deviceId+"/X/");
         mYOUTPUT = FirebaseDatabase.getInstance().getReference("/LOG/GPIO/" + deviceId+"/Y/");
@@ -232,6 +231,8 @@ public class MainActivity extends Activity {
             public void onCancelled(DatabaseError databaseError) {
             }
         });
+
+   //     blink();
     }
 
     // websocket server

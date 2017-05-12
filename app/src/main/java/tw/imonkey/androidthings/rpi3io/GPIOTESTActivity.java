@@ -33,6 +33,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.os.Handler;
+import android.util.Log;
 
 import java.io.IOException;
 import java.net.Inet4Address;
@@ -48,6 +50,8 @@ import java.util.TimeZone;
 import de.greenrobot.event.EventBus;
 
 public class GPIOTESTActivity extends Activity {
+    Handler mHandler = new Handler();//blink
+    boolean mLedState = false;//blink
     private Gpio RESETGpio, mX00Gpio,mX01Gpio,mX02Gpio,mX03Gpio,mX04Gpio,mX05Gpio,mX06Gpio,mX07Gpio,
             mY00Gpio,mY01Gpio,mY02Gpio,mY03Gpio,mY04Gpio,mY05Gpio,mY06Gpio,mY07Gpio;
     DatabaseReference  mXINPUT,mYOUTPUT,mFriend,presenceRef,lastOnlineRef,connectedRef,connectedRefF;
@@ -87,7 +91,6 @@ public class GPIOTESTActivity extends Activity {
         pinName.put("Y06","BCM20");
         pinName.put("Y07","BCM21");
 
-        EventBus.getDefault().register(this);
         SharedPreferences settings = getSharedPreferences(devicePrefs, Context.MODE_PRIVATE);
         memberEmail = settings.getString("memberEmail", null);
         deviceId = settings.getString("deviceId", null);
@@ -96,10 +99,10 @@ public class GPIOTESTActivity extends Activity {
             memberEmail = "RPI3IO@test.com";
             deviceId = "RPI3IOtest";
             startServer();
-        }else{
+        }
             init();
             deviceOnline();
-        }
+
         mXINPUT = FirebaseDatabase.getInstance().getReference("/LOG/GPIO/" + deviceId+"/X/");
         mYOUTPUT = FirebaseDatabase.getInstance().getReference("/LOG/GPIO/" + deviceId+"/Y/");
     }
@@ -107,7 +110,6 @@ public class GPIOTESTActivity extends Activity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        EventBus.getDefault().unregister(this);
         if ( RESETGpio != null) {
             try {
                 RESETGpio.close();
@@ -304,6 +306,7 @@ public class GPIOTESTActivity extends Activity {
             mY00Gpio = service.openGpio(pinName.get("Y00"));
             mY00Gpio.setDirection(Gpio.DIRECTION_OUT_INITIALLY_LOW);
             mY00Gpio.setValue(false);
+            mHandler.post(mBlinkRunnable);
         } catch (IOException e) {
             e.printStackTrace();
             alert("Y_output:"+memberEmail+"->Y00=Err");
@@ -761,6 +764,7 @@ public class GPIOTESTActivity extends Activity {
 
             }
         });
+
     }
 
     // websocket server
@@ -890,5 +894,29 @@ public class GPIOTESTActivity extends Activity {
         log.put("timeStamp", ServerValue.TIMESTAMP);
         mLog.push().setValue(log);
     }
+
+
+
+    private Runnable mBlinkRunnable = new Runnable() {
+        @Override
+        public void run() {
+            // Exit Runnable if the GPIO is already closed
+            if ( mY00Gpio == null) {
+                Log.d("blink", "mY00Gpio = null");
+                return;
+            }
+            try {
+                // Toggle the GPIO state
+                mLedState = !mLedState;
+                mY00Gpio.setValue(mLedState);
+                Log.d("blink", "State set to " + mLedState);
+
+                // Reschedule the same runnable in {#INTERVAL_BETWEEN_BLINKS_MS} milliseconds
+                mHandler.postDelayed(mBlinkRunnable, 1000);
+            } catch (IOException e) {
+                Log.e("blink", "Error on PeripheralIO API", e);
+            }
+        }
+    };
 }
 
