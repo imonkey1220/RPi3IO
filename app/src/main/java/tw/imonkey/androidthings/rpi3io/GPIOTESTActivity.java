@@ -50,8 +50,8 @@ import java.util.TimeZone;
 import de.greenrobot.event.EventBus;
 
 public class GPIOTESTActivity extends Activity {
-    Handler mHandler = new Handler();//blink
-    boolean mLedState = false;//blink
+    Handler mHandler = new Handler();//blinkTest
+    boolean mLedState = false;//blinkTest
     private Gpio RESETGpio, mX00Gpio,mX01Gpio,mX02Gpio,mX03Gpio,mX04Gpio,mX05Gpio,mX06Gpio,mX07Gpio,
             mY00Gpio,mY01Gpio,mY02Gpio,mY03Gpio,mY04Gpio,mY05Gpio,mY06Gpio,mY07Gpio;
     DatabaseReference  mXINPUT,mYOUTPUT,mFriend,presenceRef,lastOnlineRef,connectedRef,connectedRefF;
@@ -306,7 +306,7 @@ public class GPIOTESTActivity extends Activity {
             mY00Gpio = service.openGpio(pinName.get("Y00"));
             mY00Gpio.setDirection(Gpio.DIRECTION_OUT_INITIALLY_LOW);
             mY00Gpio.setValue(false);
-            mHandler.post(mBlinkRunnable);
+            mHandler.post(mBlinkRunnable);  //blinkTest
         } catch (IOException e) {
             e.printStackTrace();
             alert("Y_output:"+memberEmail+"->Y00=Err");
