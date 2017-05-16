@@ -93,20 +93,6 @@ public class MainActivity extends Activity {
         mLog=FirebaseDatabase.getInstance().getReference("/LOG/GPIO/" + deviceId+"/LOG/");
         mXINPUT = FirebaseDatabase.getInstance().getReference("/LOG/GPIO/" + deviceId+"/X/");
         mYOUTPUT = FirebaseDatabase.getInstance().getReference("/LOG/GPIO/" + deviceId+"/Y/");
-        mFriends= FirebaseDatabase.getInstance().getReference("/DEVICE/"+deviceId+"/friend");
-        mFriends.orderByKey().addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot snapshot) {
-                friends.clear();
-                for (DataSnapshot childSnapshot : snapshot.getChildren()) {
-                    friends.add(childSnapshot.getValue().toString());
-                }
-            }
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-            }
-        });
-
         init();
         deviceOnline();
     }
@@ -358,11 +344,13 @@ public class MainActivity extends Activity {
             public void onCancelled(DatabaseError error) {
             }
         });
-
+        mFriends= FirebaseDatabase.getInstance().getReference("/DEVICE/"+deviceId+"/friend");
         mFriends.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot snapshot) {
+                friends.clear();
                 for (DataSnapshot childSnapshot : snapshot.getChildren()) {
+                    friends.add(childSnapshot.getValue().toString());
                     final DatabaseReference  presenceRefF= FirebaseDatabase.getInstance().getReference("/FUI/"+childSnapshot.getValue().toString().replace(".", "_")+"/"+deviceId+"/connection");
                     presenceRefF.setValue(true);
                     presenceRefF.onDisconnect().setValue(null);
