@@ -834,12 +834,12 @@ public class GPIOTESTActivity extends Activity {
             public void onCancelled(DatabaseError error) {
             }
         });
-        mFriend= FirebaseDatabase.getInstance().getReference("/devices/"+memberEmail.replace(".", "_")+"/"+deviceId+"/friend");
+        mFriend= FirebaseDatabase.getInstance().getReference("/DEVICE/"+deviceId+"/friend");
         mFriend.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot snapshot) {
                 for (DataSnapshot childSnapshot : snapshot.getChildren()) {
-                    final DatabaseReference  presenceRefF= FirebaseDatabase.getInstance().getReference("/friend/"+childSnapshot.getValue().toString().replace(".", "_")+"/"+deviceId+"/connection");
+                    final DatabaseReference  presenceRefF= FirebaseDatabase.getInstance().getReference("/FUI/"+childSnapshot.getValue().toString().replace(".", "_")+"/"+deviceId+"/connection");
                     presenceRefF.setValue(true);
                     presenceRefF.onDisconnect().setValue(null);
                     connectedRefF = FirebaseDatabase.getInstance().getReference(".info/connected");

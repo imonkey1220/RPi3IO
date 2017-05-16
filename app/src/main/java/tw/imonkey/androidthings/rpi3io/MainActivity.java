@@ -42,6 +42,7 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.NetworkInterface;
 import java.net.SocketException;
+import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
@@ -63,9 +64,10 @@ public class MainActivity extends Activity {
     String RESET="BCM26";
     private Map<String,Gpio> GPIOMap=new HashMap<>();
 
-    DatabaseReference mIOLive,mLog, mXINPUT,mYOUTPUT,mFriend,presenceRef,lastOnlineRef,connectedRef,connectedRefF;
+    DatabaseReference mIOLive,mLog, mXINPUT,mYOUTPUT,mFriends,presenceRef,lastOnlineRef,connectedRef,connectedRefF;
     Map<String, Object> input = new HashMap<>();
     Map<String, Object> log = new HashMap<>();
+    ArrayList<String> friends = new ArrayList<>();
     String memberEmail,deviceId;
     public static final String devicePrefs = "devicePrefs";
     Map<String, Object> alert = new HashMap<>();
@@ -88,12 +90,25 @@ public class MainActivity extends Activity {
             startServer();
             blinkTest();
         }
-            init();
-            deviceOnline();
-
         mLog=FirebaseDatabase.getInstance().getReference("/LOG/GPIO/" + deviceId+"/LOG/");
         mXINPUT = FirebaseDatabase.getInstance().getReference("/LOG/GPIO/" + deviceId+"/X/");
         mYOUTPUT = FirebaseDatabase.getInstance().getReference("/LOG/GPIO/" + deviceId+"/Y/");
+        mFriends= FirebaseDatabase.getInstance().getReference("/DEVICE/"+deviceId+"/friend");
+        mFriends.orderByKey().addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot snapshot) {
+                friends.clear();
+                for (DataSnapshot childSnapshot : snapshot.getChildren()) {
+                    friends.add(childSnapshot.getValue().toString());
+                }
+            }
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+            }
+        });
+
+        init();
+        deviceOnline();
     }
 
     @Override
@@ -240,6 +255,12 @@ public class MainActivity extends Activity {
         NotifyUser.IIDPUSH(deviceId,memberEmail,"智慧機通知",message);
         NotifyUser.emailPUSH(deviceId,memberEmail,message);
         NotifyUser.SMSPUSH(deviceId,memberEmail,message);
+        for (String email : friends ) {
+            NotifyUser.topicsPUSH(deviceId, email, "智慧機通知", message);
+            NotifyUser.IIDPUSH(deviceId, email, "智慧機通知", message);
+            NotifyUser.emailPUSH(deviceId, email, message);
+            NotifyUser.SMSPUSH(deviceId, email, message);
+        }
 
         DatabaseReference mAlertMaster= FirebaseDatabase.getInstance().getReference("/FUI/"+memberEmail.replace(".", "_")+"/"+deviceId+"/alert");
         alert.clear();
@@ -337,8 +358,8 @@ public class MainActivity extends Activity {
             public void onCancelled(DatabaseError error) {
             }
         });
-        mFriend= FirebaseDatabase.getInstance().getReference("/DEVICE/"+deviceId+"/friend");
-        mFriend.addValueEventListener(new ValueEventListener() {
+
+        mFriends.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot snapshot) {
                 for (DataSnapshot childSnapshot : snapshot.getChildren()) {
