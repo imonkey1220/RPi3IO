@@ -86,6 +86,7 @@ public class MainActivity extends Activity {
             memberEmail = "test@po-pp.com";
             deviceId = "RPI3IOtest";
             startServer();
+            blinkTest();
         }
             init();
             deviceOnline();
@@ -145,6 +146,7 @@ public class MainActivity extends Activity {
         } catch (IOException e) {
             e.printStackTrace();
         }
+
         for (int i=0;i<16;i++) {
             final int index = i;
             // X00->INPUT
@@ -231,8 +233,6 @@ public class MainActivity extends Activity {
             public void onCancelled(DatabaseError databaseError) {
             }
         });
-
-   //     blink();
     }
 
     // websocket server
@@ -366,7 +366,7 @@ public class MainActivity extends Activity {
         mLog.push().setValue(log);
     }
 //blink test
-    private void blink(){
+    private void blinkTest(){
         // Post a Runnable that continuously switch the state of the GPIO, blinking the
         // corresponding LED
         mHandler.post(mBlinkRunnable);
