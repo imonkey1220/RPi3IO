@@ -235,6 +235,37 @@ public class MainActivity extends Activity {
         });
     }
 
+    private void alert(String message){
+        NotifyUser.topicsPUSH(deviceId,memberEmail,"智慧機通知",message);
+        NotifyUser.IIDPUSH(deviceId,memberEmail,"智慧機通知",message);
+        NotifyUser.emailPUSH(deviceId,memberEmail,message);
+        NotifyUser.SMSPUSH(deviceId,memberEmail,message);
+
+        DatabaseReference mAlertMaster= FirebaseDatabase.getInstance().getReference("/FUI/"+memberEmail.replace(".", "_")+"/"+deviceId+"/alert");
+        alert.clear();
+        alert.put("message",message);
+        alert.put("timeStamp", ServerValue.TIMESTAMP);
+        mAlertMaster.setValue(alert);
+        DatabaseReference mFriend= FirebaseDatabase.getInstance().getReference("/DEVICE/"+deviceId+"/friend");
+        mFriend.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot snapshot) {
+                for (DataSnapshot childSnapshot : snapshot.getChildren()) {
+                    DatabaseReference mAlertFriend= FirebaseDatabase.getInstance().getReference("/FUI/"+childSnapshot.getValue().toString().replace(".", "_")+"/"+deviceId+"/alert");
+                    mAlertFriend.setValue(alert);
+                }
+            }
+            @Override
+            public void onCancelled(DatabaseError databaseError) {}
+        });
+    }
+    private void log(String message) {
+        log.clear();
+        log.put("message", message);
+        log.put("memberEmail", memberEmail);
+        log.put("timeStamp", ServerValue.TIMESTAMP);
+        mLog.push().setValue(log);
+    }
     // websocket server
     private void startServer() {
         InetAddress inetAddress = getInetAddress();
@@ -311,7 +342,7 @@ public class MainActivity extends Activity {
             @Override
             public void onDataChange(DataSnapshot snapshot) {
                 for (DataSnapshot childSnapshot : snapshot.getChildren()) {
-                final DatabaseReference  presenceRefF= FirebaseDatabase.getInstance().getReference("/FUI/"+childSnapshot.getValue().toString().replace(".", "_")+"/"+deviceId+"/connection");
+                    final DatabaseReference  presenceRefF= FirebaseDatabase.getInstance().getReference("/FUI/"+childSnapshot.getValue().toString().replace(".", "_")+"/"+deviceId+"/connection");
                     presenceRefF.setValue(true);
                     presenceRefF.onDisconnect().setValue(null);
                     connectedRefF = FirebaseDatabase.getInstance().getReference(".info/connected");
@@ -334,37 +365,6 @@ public class MainActivity extends Activity {
         });
     }
 
-    private void alert(String message){
-        NotifyUser.topicsPUSH(deviceId,memberEmail,"智慧機通知",message);
-        NotifyUser.IIDPUSH(deviceId,memberEmail,"智慧機通知",message);
-        NotifyUser.emailPUSH(deviceId,memberEmail,message);
-        NotifyUser.SMSPUSH(deviceId,memberEmail,message);
-
-        DatabaseReference mAlertMaster= FirebaseDatabase.getInstance().getReference("/FUI/"+memberEmail.replace(".", "_")+"/"+deviceId+"/alert");
-        alert.clear();
-        alert.put("message",message);
-        alert.put("timeStamp", ServerValue.TIMESTAMP);
-        mAlertMaster.setValue(alert);
-        DatabaseReference mFriend= FirebaseDatabase.getInstance().getReference("/DEVICE/"+deviceId+"/friend");
-        mFriend.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot snapshot) {
-                for (DataSnapshot childSnapshot : snapshot.getChildren()) {
-                    DatabaseReference mAlertFriend= FirebaseDatabase.getInstance().getReference("/FUI/"+childSnapshot.getValue().toString().replace(".", "_")+"/"+deviceId+"/alert");
-                    mAlertFriend.setValue(alert);
-                }
-            }
-            @Override
-            public void onCancelled(DatabaseError databaseError) {}
-        });
-    }
-    private void log(String message) {
-        log.clear();
-        log.put("message", message);
-        log.put("memberEmail", memberEmail);
-        log.put("timeStamp", ServerValue.TIMESTAMP);
-        mLog.push().setValue(log);
-    }
 //blink test
     private void blinkTest(){
         // Post a Runnable that continuously switch the state of the GPIO, blinking the
@@ -388,7 +388,7 @@ public class MainActivity extends Activity {
                 // Reschedule the same runnable in {#INTERVAL_BETWEEN_BLINKS_MS} milliseconds
                 mHandler.postDelayed(mBlinkRunnable, 1000);
             } catch (IOException e) {
-                Log.e("blink", "Error on PeripheralIO API", e);
+                Log.e("blinkTest", "Error on PeripheralIO API", e);
             }
         }
     };
