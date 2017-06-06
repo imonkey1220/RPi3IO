@@ -53,6 +53,8 @@ import de.greenrobot.event.EventBus;
 public class MainActivity extends Activity {
     Handler mHandler = new Handler();//blink
     boolean mLedState = false;//blink
+    int dataCount;
+    int limit=1000;//max Logs (even number)
 
     //GPIO: BCM12, BCM13, BCM16, BCM17, BCM18, BCM19, BCM20, BCM21, BCM22, BCM23, BCM24, BCM25, BCM26, BCM27, BCM4, BCM5, BCM6
     String PiGPIO[]={"BCM4","BCM17","BCM27","BCM22","BCM5","BCM6","BCM13","BCM19",
@@ -72,7 +74,7 @@ public class MainActivity extends Activity {
     Map<String, Object> input = new HashMap<>();
     Map<String, Object> log = new HashMap<>();
     Map<String, Object> alert = new HashMap<>();
-    int logCount,IOCount ;
+    int logCount,XICount,YOCount ;
 
     public MySocketServer mServer;
     private static final int SERVER_PORT = 9402;
@@ -86,10 +88,11 @@ public class MainActivity extends Activity {
         memberEmail = settings.getString("memberEmail", null);
         deviceId = settings.getString("deviceId", null);
         logCount = settings.getInt("logCount",0);
-        IOCount = settings.getInt("IOCount",0);
+        XICount = settings.getInt("XICount",0);
+        YOCount = settings.getInt("YOCount",0);
 
         if (memberEmail == null) {
-            memberEmail = "test@po-pp.com";
+            memberEmail = "test@po-po.com";
             deviceId = "RPI3IOtest";
             DatabaseReference mAddTest= FirebaseDatabase.getInstance().getReference("/FUI/" +memberEmail.replace(".", "_"));
             Map<String, Object> addTest = new HashMap<>();
@@ -102,7 +105,7 @@ public class MainActivity extends Activity {
             addTest.put("topics_id",deviceId);
             mAddTest.child(deviceId).setValue(addTest);
             startServer();
-            blinkTest();
+     //       blinkTest();
         }
         mLog=FirebaseDatabase.getInstance().getReference("/LOG/GPIO/" + deviceId+"/LOG/");
         mXINPUT = FirebaseDatabase.getInstance().getReference("/LOG/GPIO/" + deviceId+"/X/");
@@ -180,7 +183,15 @@ public class MainActivity extends Activity {
                                 input.put("memberEmail", memberEmail);
                                 input.put("timeStamp", ServerValue.TIMESTAMP);
                                 mXINPUT.push().setValue(input);
-                                IOCount++;
+                                XICount++;
+                                if (XICount>(limit+(limit)/2)){
+                                    dataLimit(mXINPUT,limit);
+                                    XICount=limit;
+                                }
+                                SharedPreferences.Editor editor = getSharedPreferences(devicePrefs, Context.MODE_PRIVATE).edit();
+                                editor.putInt("XICount",XICount);
+                                editor.apply();
+
                                 alert(GPIOName[index]+":"+GPIO[index].getValue());
                                 log(GPIOName[index]+":"+GPIO[index].getValue());
 
@@ -213,7 +224,15 @@ public class MainActivity extends Activity {
             public void onChildAdded(DataSnapshot dataSnapshot, String s) {
                 for(String OutputPin :GPIOMap.keySet()) {
                     if (dataSnapshot.child(OutputPin).getValue() != null) {
-                        IOCount++;
+                        YOCount++;
+                        if (YOCount>(limit+(limit)/2)){
+                            dataLimit(mYOUTPUT,limit);
+                            YOCount=limit;
+                            SharedPreferences.Editor editor = getSharedPreferences(devicePrefs, Context.MODE_PRIVATE).edit();
+                            editor.putInt("YOCount",YOCount);
+                            editor.apply();
+
+                        }
                         if (dataSnapshot.child(OutputPin).getValue().equals(true)) {
                             try {
                                 GPIOMap.get(OutputPin).setValue(true);
@@ -280,70 +299,45 @@ public class MainActivity extends Activity {
         log.put("memberEmail", memberEmail);
         log.put("timeStamp", ServerValue.TIMESTAMP);
         mLog.push().setValue(log);
-        //logCount++
-    }
-    // websocket server
-    private void startServer() {
-        InetAddress inetAddress = getInetAddress();
-        if (inetAddress == null) {
-            return;
+        logCount++;
+        if (logCount>(limit+(limit)/2)){
+            dataLimit(mLog,limit);
+            logCount=limit;
         }
+        SharedPreferences.Editor editor = getSharedPreferences(devicePrefs, Context.MODE_PRIVATE).edit();
+        editor.putInt("logCount",logCount);
+        editor.apply();
 
-        mServer = new MySocketServer(new InetSocketAddress(inetAddress.getHostAddress(), SERVER_PORT));
-        mServer.start();
     }
 
-    private static InetAddress getInetAddress() {
-        try {
-            for (Enumeration en = NetworkInterface.getNetworkInterfaces(); en.hasMoreElements();) {
-                NetworkInterface networkInterface = (NetworkInterface) en.nextElement();
-
-                for (Enumeration enumIpAddr = networkInterface.getInetAddresses(); enumIpAddr.hasMoreElements();) {
-                    InetAddress inetAddress = (InetAddress) enumIpAddr.nextElement();
-
-                    if (!inetAddress.isLoopbackAddress() && inetAddress instanceof Inet4Address) {
-                        return inetAddress;
-                    }
-                }
+    private void dataLimit(final DatabaseReference mData,int limit) {
+        mData.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot snapshot) {
+                dataCount=(int)(snapshot.getChildrenCount());
             }
-        } catch (SocketException e) {
-            e.printStackTrace();
-        }
-
-        return null;
-    }
-
-    @SuppressWarnings("UnusedDeclaration")
-    public void onEvent(SocketMessageEvent event) {
-        String message = event.getMessage();
-        String[] mArray = message.split(",");
-        if (mArray.length==2) {
-            SharedPreferences.Editor editor = getSharedPreferences(devicePrefs, Context.MODE_PRIVATE).edit();
-            editor.putString("memberEmail", mArray[0]);
-            editor.putString("deviceId", mArray[1]);
-            editor.apply();
-            mServer.sendMessage("echo: " + message);
-            Intent i;
-            i = new Intent(this,MainActivity.class);
-            startActivity(i);
-        }
-    }
-
-    private void dataLimit(final DatabaseReference mData) {
-        mData.orderByKey().limitToLast(500)
-                .addListenerForSingleValueEvent(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(DataSnapshot snapshot) {
-                        for (DataSnapshot childSnapshot : snapshot.getChildren()) {
-                            mData.child(childSnapshot.getKey()).removeValue();
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+            }
+        });
+        if((dataCount-limit)>0) {
+            mData.orderByKey().limitToFirst(dataCount - limit)
+                    .addListenerForSingleValueEvent(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(DataSnapshot snapshot) {
+                            for (DataSnapshot childSnapshot : snapshot.getChildren()) {
+                                mData.child(childSnapshot.getKey()).removeValue();
+                            }
                         }
-                    }
 
-                    @Override
-                    public void onCancelled(DatabaseError databaseError) {
-                    }
-                });
+                        @Override
+                        public void onCancelled(DatabaseError databaseError) {
+                        }
+                    });
+        }
     }
+
+
 
     //device online check
     private void deviceOnline(){
@@ -399,7 +393,54 @@ public class MainActivity extends Activity {
         });
     }
 
-//blink test
+    // websocket server
+    private void startServer() {
+        InetAddress inetAddress = getInetAddress();
+        if (inetAddress == null) {
+            return;
+        }
+
+        mServer = new MySocketServer(new InetSocketAddress(inetAddress.getHostAddress(), SERVER_PORT));
+        mServer.start();
+    }
+
+    private static InetAddress getInetAddress() {
+        try {
+            for (Enumeration en = NetworkInterface.getNetworkInterfaces(); en.hasMoreElements();) {
+                NetworkInterface networkInterface = (NetworkInterface) en.nextElement();
+
+                for (Enumeration enumIpAddr = networkInterface.getInetAddresses(); enumIpAddr.hasMoreElements();) {
+                    InetAddress inetAddress = (InetAddress) enumIpAddr.nextElement();
+
+                    if (!inetAddress.isLoopbackAddress() && inetAddress instanceof Inet4Address) {
+                        return inetAddress;
+                    }
+                }
+            }
+        } catch (SocketException e) {
+            e.printStackTrace();
+        }
+
+        return null;
+    }
+
+    @SuppressWarnings("UnusedDeclaration")
+    public void onEvent(SocketMessageEvent event) {
+        String message = event.getMessage();
+        String[] mArray = message.split(",");
+        if (mArray.length==2) {
+            SharedPreferences.Editor editor = getSharedPreferences(devicePrefs, Context.MODE_PRIVATE).edit();
+            editor.putString("memberEmail", mArray[0]);
+            editor.putString("deviceId", mArray[1]);
+            editor.apply();
+            mServer.sendMessage("echo: " + message);
+            Intent i;
+            i = new Intent(this,MainActivity.class);
+            startActivity(i);
+        }
+    }
+
+    //blink test
     private void blinkTest(){
         // Post a Runnable that continuously switch the state of the GPIO, blinking the
         // corresponding LED
