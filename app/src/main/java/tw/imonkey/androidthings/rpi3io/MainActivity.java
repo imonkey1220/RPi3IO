@@ -59,18 +59,20 @@ public class MainActivity extends Activity {
             "BCM18","BCM23","BCM24","BCM25","BCM12","BCM16","BCM20","BCM21"};
     String GPIOName[]={"X00","X01","X02","X03","X04","X05","X06","X07",
             "Y00","Y01","Y02","Y03","Y04","Y05","Y06","Y07"};
-    private Gpio[] GPIO=new Gpio[16];
-    private Gpio RESETGpio;
+    Gpio[] GPIO=new Gpio[16];
+    Gpio RESETGpio;
     String RESET="BCM26";
-    private Map<String,Gpio> GPIOMap=new HashMap<>();
+    Map<String,Gpio> GPIOMap=new HashMap<>();
 
     DatabaseReference mIOLive,mLog, mXINPUT,mYOUTPUT,mFriends,presenceRef,lastOnlineRef,connectedRef,connectedRefF;
-    Map<String, Object> input = new HashMap<>();
-    Map<String, Object> log = new HashMap<>();
     ArrayList<String> friends = new ArrayList<>();
     String memberEmail,deviceId;
     public static final String devicePrefs = "devicePrefs";
+
+    Map<String, Object> input = new HashMap<>();
+    Map<String, Object> log = new HashMap<>();
     Map<String, Object> alert = new HashMap<>();
+    int logCount,IOCount ;
 
     public MySocketServer mServer;
     private static final int SERVER_PORT = 9402;
@@ -83,10 +85,22 @@ public class MainActivity extends Activity {
         SharedPreferences settings = getSharedPreferences(devicePrefs, Context.MODE_PRIVATE);
         memberEmail = settings.getString("memberEmail", null);
         deviceId = settings.getString("deviceId", null);
+        logCount = settings.getInt("logCount",0);
+        IOCount = settings.getInt("IOCount",0);
 
         if (memberEmail == null) {
             memberEmail = "test@po-pp.com";
             deviceId = "RPI3IOtest";
+            DatabaseReference mAddTest= FirebaseDatabase.getInstance().getReference("/FUI/" +memberEmail.replace(".", "_"));
+            Map<String, Object> addTest = new HashMap<>();
+            addTest.put("companyId","po-po") ;
+            addTest.put("device","rpi3IO");
+            addTest.put("deviceType","GPIO機"); //GPIO機
+            addTest.put("description","Android things rpi3IO test");
+            addTest.put("masterEmail",memberEmail) ;
+            addTest.put("timeStamp", ServerValue.TIMESTAMP);
+            addTest.put("topics_id",deviceId);
+            mAddTest.child(deviceId).setValue(addTest);
             startServer();
             blinkTest();
         }
@@ -166,6 +180,7 @@ public class MainActivity extends Activity {
                                 input.put("memberEmail", memberEmail);
                                 input.put("timeStamp", ServerValue.TIMESTAMP);
                                 mXINPUT.push().setValue(input);
+                                IOCount++;
                                 alert(GPIOName[index]+":"+GPIO[index].getValue());
                                 log(GPIOName[index]+":"+GPIO[index].getValue());
 
@@ -198,6 +213,7 @@ public class MainActivity extends Activity {
             public void onChildAdded(DataSnapshot dataSnapshot, String s) {
                 for(String OutputPin :GPIOMap.keySet()) {
                     if (dataSnapshot.child(OutputPin).getValue() != null) {
+                        IOCount++;
                         if (dataSnapshot.child(OutputPin).getValue().equals(true)) {
                             try {
                                 GPIOMap.get(OutputPin).setValue(true);
@@ -237,15 +253,15 @@ public class MainActivity extends Activity {
     }
 
     private void alert(String message){
-        NotifyUser.topicsPUSH(deviceId,memberEmail,"智慧機通知",message);
+ //       NotifyUser.topicsPUSH(deviceId,memberEmail,"智慧機通知",message);
         NotifyUser.IIDPUSH(deviceId,memberEmail,"智慧機通知",message);
-        NotifyUser.emailPUSH(deviceId,memberEmail,message);
-        NotifyUser.SMSPUSH(deviceId,memberEmail,message);
+  //      NotifyUser.emailPUSH(deviceId,memberEmail,message);
+   //     NotifyUser.SMSPUSH(deviceId,memberEmail,message);
         for (String email : friends ) {
-            NotifyUser.topicsPUSH(deviceId, email, "智慧機通知", message);
+   //         NotifyUser.topicsPUSH(deviceId, email, "智慧機通知", message);
             NotifyUser.IIDPUSH(deviceId, email, "智慧機通知", message);
-            NotifyUser.emailPUSH(deviceId, email, message);
-            NotifyUser.SMSPUSH(deviceId, email, message);
+    //        NotifyUser.emailPUSH(deviceId, email, message);
+    //        NotifyUser.SMSPUSH(deviceId, email, message);
         }
 
         DatabaseReference mAlertMaster= FirebaseDatabase.getInstance().getReference("/FUI/"+memberEmail.replace(".", "_")+"/"+deviceId+"/alert");
@@ -264,6 +280,7 @@ public class MainActivity extends Activity {
         log.put("memberEmail", memberEmail);
         log.put("timeStamp", ServerValue.TIMESTAMP);
         mLog.push().setValue(log);
+        //logCount++
     }
     // websocket server
     private void startServer() {
@@ -310,6 +327,22 @@ public class MainActivity extends Activity {
             i = new Intent(this,MainActivity.class);
             startActivity(i);
         }
+    }
+
+    private void dataLimit(final DatabaseReference mData) {
+        mData.orderByKey().limitToLast(500)
+                .addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(DataSnapshot snapshot) {
+                        for (DataSnapshot childSnapshot : snapshot.getChildren()) {
+                            mData.child(childSnapshot.getKey()).removeValue();
+                        }
+                    }
+
+                    @Override
+                    public void onCancelled(DatabaseError databaseError) {
+                    }
+                });
     }
 
     //device online check

@@ -863,10 +863,10 @@ public class GPIOTESTActivity extends Activity {
     }
 
     private void alert(String message){
-        NotifyUser.topicsPUSH(deviceId,memberEmail,"智慧機通知",message);
+    //    NotifyUser.topicsPUSH(deviceId,memberEmail,"智慧機通知",message);
         NotifyUser.IIDPUSH(deviceId,memberEmail,"智慧機通知",message);
-        NotifyUser.emailPUSH(deviceId,memberEmail,message);
-        NotifyUser.SMSPUSH(deviceId,memberEmail,message);
+    //    NotifyUser.emailPUSH(deviceId,memberEmail,message);
+    //   NotifyUser.SMSPUSH(deviceId,memberEmail,message);
 
         DatabaseReference mAlertMaster= FirebaseDatabase.getInstance().getReference("/FUI/"+memberEmail.replace(".", "_")+"/"+deviceId+"/alert");
         alert.clear();
