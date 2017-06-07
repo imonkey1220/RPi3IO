@@ -244,6 +244,7 @@ public class MainActivity extends Activity {
                         } else {
                             try {
                                 GPIOMap.get(OutputPin).setValue(false);
+                                log(OutputPin+"="+true);
                                 alert(OutputPin+"="+false);
                             } catch (IOException e) {
                                 e.printStackTrace();
