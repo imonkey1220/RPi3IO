@@ -192,8 +192,8 @@ public class MainActivity extends Activity {
                                 editor.putInt("XICount",XICount);
                                 editor.apply();
 
-                                alert(GPIOName[index]+":"+GPIO[index].getValue());
-                                log(GPIOName[index]+":"+GPIO[index].getValue());
+                                alert(GPIOName[index]+"="+GPIO[index].getValue());
+                                log(GPIOName[index]+"="+GPIO[index].getValue());
 
                             } catch (IOException e) {
                                 e.printStackTrace();
@@ -236,15 +236,15 @@ public class MainActivity extends Activity {
                         if (dataSnapshot.child(OutputPin).getValue().equals(true)) {
                             try {
                                 GPIOMap.get(OutputPin).setValue(true);
-                                alert(OutputPin+":"+true);
-                                log(OutputPin+":"+true);
+                                alert(OutputPin+"="+true);
+                                log(OutputPin+"="+true);
                             } catch (IOException e) {
                                 e.printStackTrace();
                             }
                         } else {
                             try {
                                 GPIOMap.get(OutputPin).setValue(false);
-                                alert(OutputPin+":"+false);
+                                alert(OutputPin+"="+false);
                             } catch (IOException e) {
                                 e.printStackTrace();
                             }
@@ -285,7 +285,7 @@ public class MainActivity extends Activity {
 
         DatabaseReference mAlertMaster= FirebaseDatabase.getInstance().getReference("/FUI/"+memberEmail.replace(".", "_")+"/"+deviceId+"/alert");
         alert.clear();
-        alert.put("message",message);
+        alert.put("message","Device:"+message);
         alert.put("timeStamp", ServerValue.TIMESTAMP);
         mAlertMaster.setValue(alert);
         for (String email : friends ) {
@@ -295,7 +295,7 @@ public class MainActivity extends Activity {
     }
     private void log(String message) {
         log.clear();
-        log.put("message", message);
+        log.put("message", "Device:"+message);
         log.put("memberEmail", memberEmail);
         log.put("timeStamp", ServerValue.TIMESTAMP);
         mLog.push().setValue(log);
