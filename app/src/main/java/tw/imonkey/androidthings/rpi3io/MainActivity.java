@@ -231,7 +231,6 @@ public class MainActivity extends Activity {
                             SharedPreferences.Editor editor = getSharedPreferences(devicePrefs, Context.MODE_PRIVATE).edit();
                             editor.putInt("YOCount",YOCount);
                             editor.apply();
-
                         }
                         if (dataSnapshot.child(OutputPin).getValue().equals(true)) {
                             try {
@@ -244,7 +243,7 @@ public class MainActivity extends Activity {
                         } else {
                             try {
                                 GPIOMap.get(OutputPin).setValue(false);
-                                log(OutputPin+"="+true);
+                                log(OutputPin+"="+false);
                                 alert(OutputPin+"="+false);
                             } catch (IOException e) {
                                 e.printStackTrace();
