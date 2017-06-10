@@ -180,18 +180,9 @@ public class MainActivity extends Activity {
                             try {
                                 input.clear();
                                 input.put(GPIOName[index], GPIO[index].getValue());
-                                input.put("memberEmail", memberEmail);
+                                input.put("memberEmail", "Device");
                                 input.put("timeStamp", ServerValue.TIMESTAMP);
-                                mXINPUT.push().setValue(input);
-                                XICount++;
-                                if (XICount>(limit+(limit)/2)){
-                                    dataLimit(mXINPUT,limit);
-                                    XICount=limit;
-                                }
-                                SharedPreferences.Editor editor = getSharedPreferences(devicePrefs, Context.MODE_PRIVATE).edit();
-                                editor.putInt("XICount",XICount);
-                                editor.apply();
-
+                                mXINPUT.child(GPIOName[index]).push().setValue(input);
                                 alert(GPIOName[index]+"="+GPIO[index].getValue());
                                 log(GPIOName[index]+"="+GPIO[index].getValue());
 
@@ -199,6 +190,11 @@ public class MainActivity extends Activity {
                                 e.printStackTrace();
                             }
                             return true;
+                        }
+
+                        @Override
+                        public void onGpioError(Gpio gpio, int error) {
+                            super.onGpioError(gpio, error);
                         }
                     });
                 } catch (IOException e) {
@@ -219,52 +215,286 @@ public class MainActivity extends Activity {
             GPIOMap.put(GPIOName[index], GPIO[index]);
         }
 
-        mYOUTPUT.addChildEventListener(new ChildEventListener() {
+        mYOUTPUT.child("Y00").limitToLast(1).addChildEventListener(new ChildEventListener() {
             @Override
             public void onChildAdded(DataSnapshot dataSnapshot, String s) {
-                for(String OutputPin :GPIOMap.keySet()) {
-                    if (dataSnapshot.child(OutputPin).getValue() != null) {
-                        YOCount++;
-                        if (YOCount>(limit+(limit)/2)){
-                            dataLimit(mYOUTPUT,limit);
-                            YOCount=limit;
-                            SharedPreferences.Editor editor = getSharedPreferences(devicePrefs, Context.MODE_PRIVATE).edit();
-                            editor.putInt("YOCount",YOCount);
-                            editor.apply();
-                        }
-                        if (dataSnapshot.child(OutputPin).getValue().equals(true)) {
-                            try {
-                                GPIOMap.get(OutputPin).setValue(true);
-                                alert(OutputPin+"="+true);
-                                log(OutputPin+"="+true);
-                            } catch (IOException e) {
-                                e.printStackTrace();
-                            }
-                        } else {
-                            try {
-                                GPIOMap.get(OutputPin).setValue(false);
-                                log(OutputPin+"="+false);
-                                alert(OutputPin+"="+false);
-                            } catch (IOException e) {
-                                e.printStackTrace();
-                            }
-                        }
+
+                if (dataSnapshot.child("Y00").getValue().equals(true)) {
+                    try {
+                        GPIOMap.get("Y00").setValue(true);
+                        alert("Y00"+"="+true);
+                        log("Y00"+"="+true);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                } else {
+                    try {
+                        GPIOMap.get("Y00").setValue(false);
+                        log("Y00"+"="+false);
+                        alert("Y00"+"="+false);
+                    } catch (IOException e) {
+                        e.printStackTrace();
                     }
                 }
             }
-
             @Override
             public void onChildRemoved(DataSnapshot dataSnapshot) {
             }
-
             @Override
             public void onChildMoved(DataSnapshot dataSnapshot, String s) {
             }
-
             @Override
             public void onChildChanged(DataSnapshot dataSnapshot, String s) {
             }
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+            }
+        });
+        mYOUTPUT.child("Y01").limitToLast(1).addChildEventListener(new ChildEventListener() {
+            @Override
+            public void onChildAdded(DataSnapshot dataSnapshot, String s) {
 
+                if (dataSnapshot.child("Y01").getValue().equals(true)) {
+                    try {
+                        GPIOMap.get("Y01").setValue(true);
+                        alert("Y01"+"="+true);
+                        log("Y01"+"="+true);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                } else {
+                    try {
+                        GPIOMap.get("Y01").setValue(false);
+                        log("Y01"+"="+false);
+                        alert("Y01"+"="+false);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+            @Override
+            public void onChildRemoved(DataSnapshot dataSnapshot) {
+            }
+            @Override
+            public void onChildMoved(DataSnapshot dataSnapshot, String s) {
+            }
+            @Override
+            public void onChildChanged(DataSnapshot dataSnapshot, String s) {
+            }
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+            }
+        });
+        mYOUTPUT.child("Y02").limitToLast(1).addChildEventListener(new ChildEventListener() {
+            @Override
+            public void onChildAdded(DataSnapshot dataSnapshot, String s) {
+
+                if (dataSnapshot.child("Y02").getValue().equals(true)) {
+                    try {
+                        GPIOMap.get("Y02").setValue(true);
+                        alert("Y02"+"="+true);
+                        log("Y02"+"="+true);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                } else {
+                    try {
+                        GPIOMap.get("Y02").setValue(false);
+                        log("Y02"+"="+false);
+                        alert("Y02"+"="+false);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+            @Override
+            public void onChildRemoved(DataSnapshot dataSnapshot) {
+            }
+            @Override
+            public void onChildMoved(DataSnapshot dataSnapshot, String s) {
+            }
+            @Override
+            public void onChildChanged(DataSnapshot dataSnapshot, String s) {
+            }
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+            }
+        });
+
+        mYOUTPUT.child("Y03").limitToLast(1).addChildEventListener(new ChildEventListener() {
+            @Override
+            public void onChildAdded(DataSnapshot dataSnapshot, String s) {
+
+                if (dataSnapshot.child("Y03").getValue().equals(true)) {
+                    try {
+                        GPIOMap.get("Y03").setValue(true);
+                        alert("Y03"+"="+true);
+                        log("Y03"+"="+true);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                } else {
+                    try {
+                        GPIOMap.get("Y03").setValue(false);
+                        log("Y03"+"="+false);
+                        alert("Y03"+"="+false);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+            @Override
+            public void onChildRemoved(DataSnapshot dataSnapshot) {
+            }
+            @Override
+            public void onChildMoved(DataSnapshot dataSnapshot, String s) {
+            }
+            @Override
+            public void onChildChanged(DataSnapshot dataSnapshot, String s) {
+            }
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+            }
+        });
+
+        mYOUTPUT.child("Y04").limitToLast(1).addChildEventListener(new ChildEventListener() {
+            @Override
+            public void onChildAdded(DataSnapshot dataSnapshot, String s) {
+
+                if (dataSnapshot.child("Y04").getValue().equals(true)) {
+                    try {
+                        GPIOMap.get("Y04").setValue(true);
+                        alert("Y04"+"="+true);
+                        log("Y04"+"="+true);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                } else {
+                    try {
+                        GPIOMap.get("Y04").setValue(false);
+                        log("Y04"+"="+false);
+                        alert("Y04"+"="+false);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+            @Override
+            public void onChildRemoved(DataSnapshot dataSnapshot) {
+            }
+            @Override
+            public void onChildMoved(DataSnapshot dataSnapshot, String s) {
+            }
+            @Override
+            public void onChildChanged(DataSnapshot dataSnapshot, String s) {
+            }
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+            }
+        });
+
+        mYOUTPUT.child("Y05").limitToLast(1).addChildEventListener(new ChildEventListener() {
+            @Override
+            public void onChildAdded(DataSnapshot dataSnapshot, String s) {
+
+                if (dataSnapshot.child("Y05").getValue().equals(true)) {
+                    try {
+                        GPIOMap.get("Y05").setValue(true);
+                        alert("Y05"+"="+true);
+                        log("Y05"+"="+true);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                } else {
+                    try {
+                        GPIOMap.get("Y05").setValue(false);
+                        log("Y05"+"="+false);
+                        alert("Y05"+"="+false);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+            @Override
+            public void onChildRemoved(DataSnapshot dataSnapshot) {
+            }
+            @Override
+            public void onChildMoved(DataSnapshot dataSnapshot, String s) {
+            }
+            @Override
+            public void onChildChanged(DataSnapshot dataSnapshot, String s) {
+            }
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+            }
+        });
+        mYOUTPUT.child("Y06").limitToLast(1).addChildEventListener(new ChildEventListener() {
+            @Override
+            public void onChildAdded(DataSnapshot dataSnapshot, String s) {
+
+                if (dataSnapshot.child("Y06").getValue().equals(true)) {
+                    try {
+                        GPIOMap.get("Y06").setValue(true);
+                        alert("Y06"+"="+true);
+                        log("Y06"+"="+true);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                } else {
+                    try {
+                        GPIOMap.get("Y06").setValue(false);
+                        log("Y06"+"="+false);
+                        alert("Y06"+"="+false);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+            @Override
+            public void onChildRemoved(DataSnapshot dataSnapshot) {
+            }
+            @Override
+            public void onChildMoved(DataSnapshot dataSnapshot, String s) {
+            }
+            @Override
+            public void onChildChanged(DataSnapshot dataSnapshot, String s) {
+            }
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+            }
+        });
+
+        mYOUTPUT.child("Y07").limitToLast(1).addChildEventListener(new ChildEventListener() {
+            @Override
+            public void onChildAdded(DataSnapshot dataSnapshot, String s) {
+
+                if (dataSnapshot.child("Y07").getValue().equals(true)) {
+                    try {
+                        GPIOMap.get("Y07").setValue(true);
+                        alert("Y07"+"="+true);
+                        log("Y07"+"="+true);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                } else {
+                    try {
+                        GPIOMap.get("Y07").setValue(false);
+                        log("Y07"+"="+false);
+                        alert("Y07"+"="+false);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+            @Override
+            public void onChildRemoved(DataSnapshot dataSnapshot) {
+            }
+            @Override
+            public void onChildMoved(DataSnapshot dataSnapshot, String s) {
+            }
+            @Override
+            public void onChildChanged(DataSnapshot dataSnapshot, String s) {
+            }
             @Override
             public void onCancelled(DatabaseError databaseError) {
             }
