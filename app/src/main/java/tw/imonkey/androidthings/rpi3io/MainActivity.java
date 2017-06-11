@@ -98,7 +98,7 @@ public class MainActivity extends Activity {
             Map<String, Object> addTest = new HashMap<>();
             addTest.put("companyId","po-po") ;
             addTest.put("device","rpi3IO");
-            addTest.put("deviceType","GPIO機"); //GPIO機
+            addTest.put("deviceType","GPIO智慧機"); //GPIO智慧機
             addTest.put("description","Android things rpi3IO test");
             addTest.put("masterEmail",memberEmail) ;
             addTest.put("timeStamp", ServerValue.TIMESTAMP);
