@@ -50,7 +50,7 @@ import java.util.TimeZone;
 
 import de.greenrobot.event.EventBus;
 
-public class MainActivity extends Activity {
+public class Main2Activity extends Activity {
     Handler mHandler = new Handler();//blink
     boolean mLedState = false;//blink
     int dataCount;
@@ -66,8 +66,8 @@ public class MainActivity extends Activity {
     String RESET="BCM26";
     Map<String,Gpio> GPIOMap=new HashMap<>();
 
-    DatabaseReference mIOLive,mLog, mXINPUT,mYOUTPUT,mFriends,presenceRef,lastOnlineRef,connectedRef,connectedRefF;
-    ArrayList<String> friends = new ArrayList<>();
+    DatabaseReference mLog, mXINPUT,mYOUTPUT,mUsers,presenceRef,connectedRef;
+    ArrayList<String> users = new ArrayList<>();
     String memberEmail,deviceId;
     public static final String devicePrefs = "devicePrefs";
 
@@ -93,9 +93,8 @@ public class MainActivity extends Activity {
 
         if (memberEmail == null) {
             memberEmail = "test@po-po.com";
-            deviceId = "RPI3IOtest";
-            DatabaseReference mAddTestFUI= FirebaseDatabase.getInstance().getReference("/FUI/" +memberEmail.replace(".", "_"));
-            DatabaseReference mAddTestDevice=FirebaseDatabase.getInstance().getReference("/DEVICE/");
+            deviceId = "RPI3_IO_test";
+            DatabaseReference mAddTestDevice=FirebaseDatabase.getInstance().getReference("/DEVICE/"+deviceId);
             Map<String, Object> addTest = new HashMap<>();
             addTest.put("companyId","po-po") ;
             addTest.put("device","rpi3IO");
@@ -104,17 +103,16 @@ public class MainActivity extends Activity {
             addTest.put("masterEmail",memberEmail) ;
             addTest.put("timeStamp", ServerValue.TIMESTAMP);
             addTest.put("topics_id",deviceId);
-            mAddTestFUI.child(deviceId).setValue(addTest);
             Map<String, Object> user = new HashMap<>();
             user.put(memberEmail.replace(".","_"),memberEmail);
             addTest.put("users",user);
-            mAddTestDevice.child(deviceId).setValue(addTest);
+            mAddTestDevice.setValue(addTest);
             startServer();
-     //       blinkTest();
+            //       blinkTest();
         }
-        mLog=FirebaseDatabase.getInstance().getReference("/LOG/GPIO/" + deviceId+"/LOG/");
-        mXINPUT = FirebaseDatabase.getInstance().getReference("/LOG/GPIO/" + deviceId+"/X/");
-        mYOUTPUT = FirebaseDatabase.getInstance().getReference("/LOG/GPIO/" + deviceId+"/Y/");
+        mLog=FirebaseDatabase.getInstance().getReference("/DEVICE/" + deviceId+"/LOG/");
+        mXINPUT = FirebaseDatabase.getInstance().getReference("/DEVICE/" + deviceId+"/X/");
+        mYOUTPUT = FirebaseDatabase.getInstance().getReference("/DEVICE/" + deviceId+"/Y/");
         init();
         deviceOnline();
     }
@@ -147,6 +145,20 @@ public class MainActivity extends Activity {
     }
 
     private  void init(){
+        //Device's Users
+        mUsers= FirebaseDatabase.getInstance().getReference("/DEVICE/"+deviceId+"/users/");
+        mUsers.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot snapshot) {
+                users.clear();
+                for (DataSnapshot childSnapshot : snapshot.getChildren()) {
+                    users.add(childSnapshot.getValue().toString());
+                }
+            }
+            @Override
+            public void onCancelled(DatabaseError databaseError) {}
+        });
+
         PeripheralManagerService service = new PeripheralManagerService();
         try {
             RESETGpio = service.openGpio(RESET);
@@ -507,26 +519,18 @@ public class MainActivity extends Activity {
     }
 
     private void alert(String message){
- //       NotifyUser.topicsPUSH(deviceId,memberEmail,"智慧機通知",message);
-        NotifyUser.IIDPUSH(deviceId,memberEmail,"智慧機通知",message);
-  //      NotifyUser.emailPUSH(deviceId,memberEmail,message);
-   //     NotifyUser.SMSPUSH(deviceId,memberEmail,message);
-        for (String email : friends ) {
-   //         NotifyUser.topicsPUSH(deviceId, email, "智慧機通知", message);
+        for (String email : users ) {
+            //         NotifyUser.topicsPUSH(deviceId, email, "智慧機通知", message);
             NotifyUser.IIDPUSH(deviceId, email, "智慧機通知", message);
-    //        NotifyUser.emailPUSH(deviceId, email, message);
-    //        NotifyUser.SMSPUSH(deviceId, email, message);
+            //        NotifyUser.emailPUSH(deviceId, email, message);
+            //        NotifyUser.SMSPUSH(deviceId, email, message);
         }
 
-        DatabaseReference mAlertMaster= FirebaseDatabase.getInstance().getReference("/FUI/"+memberEmail.replace(".", "_")+"/"+deviceId+"/alert");
+        DatabaseReference mAlertMaster= FirebaseDatabase.getInstance().getReference("/DEVICE/"+deviceId+"/alert");
         alert.clear();
         alert.put("message","Device:"+message);
         alert.put("timeStamp", ServerValue.TIMESTAMP);
         mAlertMaster.setValue(alert);
-        for (String email : friends ) {
-            DatabaseReference mAlertFriend= FirebaseDatabase.getInstance().getReference("/FUI/"+email.replace(".", "_")+"/"+deviceId+"/alert");
-            mAlertFriend.setValue(alert);
-        }
     }
     private void log(String message) {
         log.clear();
@@ -576,14 +580,9 @@ public class MainActivity extends Activity {
 
     //device online check
     private void deviceOnline(){
-        mIOLive=FirebaseDatabase.getInstance().getReference("/LOG/GPIO/"+deviceId+"/connection");//for log activity
-        mIOLive.setValue(true);
-        mIOLive.onDisconnect().setValue(null);
-        presenceRef = FirebaseDatabase.getInstance().getReference("/FUI/"+memberEmail.replace(".", "_")+"/"+deviceId+"/connection");
+        presenceRef=FirebaseDatabase.getInstance().getReference("/DEVICE/"+deviceId+"/connection");//for log activity
         presenceRef.setValue(true);
         presenceRef.onDisconnect().setValue(null);
-        lastOnlineRef =FirebaseDatabase.getInstance().getReference("/FUI/"+memberEmail.replace(".", "_")+"/"+deviceId+"/lastOnline");
-        lastOnlineRef.onDisconnect().setValue(ServerValue.TIMESTAMP);
         connectedRef = FirebaseDatabase.getInstance().getReference(".info/connected");
         connectedRef.addValueEventListener(new ValueEventListener() {
             @Override
@@ -591,40 +590,11 @@ public class MainActivity extends Activity {
                 Boolean connected = snapshot.getValue(Boolean.class);
                 if (connected) {
                     presenceRef.setValue(true);
-                    mIOLive.setValue(true);
                 }
             }
             @Override
             public void onCancelled(DatabaseError error) {
             }
-        });
-        mFriends= FirebaseDatabase.getInstance().getReference("/DEVICE/"+deviceId+"/friend");
-        mFriends.addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot snapshot) {
-                friends.clear();
-                for (DataSnapshot childSnapshot : snapshot.getChildren()) {
-                    friends.add(childSnapshot.getValue().toString());
-                    final DatabaseReference  presenceRefF= FirebaseDatabase.getInstance().getReference("/FUI/"+childSnapshot.getValue().toString().replace(".", "_")+"/"+deviceId+"/connection");
-                    presenceRefF.setValue(true);
-                    presenceRefF.onDisconnect().setValue(null);
-                    connectedRefF = FirebaseDatabase.getInstance().getReference(".info/connected");
-                    connectedRefF.addValueEventListener(new ValueEventListener() {
-                        @Override
-                        public void onDataChange(DataSnapshot snapshot) {
-                            Boolean connected = snapshot.getValue(Boolean.class);
-                            if (connected) {
-                                presenceRefF.setValue(true);
-                            }
-                        }
-                        @Override
-                        public void onCancelled(DatabaseError error) {
-                        }
-                    });
-                }
-            }
-            @Override
-            public void onCancelled(DatabaseError databaseError) {}
         });
     }
 
@@ -670,7 +640,7 @@ public class MainActivity extends Activity {
             editor.apply();
             mServer.sendMessage("echo: " + message);
             Intent i;
-            i = new Intent(this,MainActivity.class);
+            i = new Intent(this,Main2Activity.class);
             startActivity(i);
         }
     }
